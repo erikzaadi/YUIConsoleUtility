@@ -31,18 +31,18 @@
   <ItemGroup>
     <Reference Include="EcmaScript.NET.modified, Version=0.1.1.0, Culture=neutral, PublicKeyToken=7d53ba4f537753a5, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Third Party\Yahoo.Yui.Compressor v1.3.0.0.zip (for .NET 2.0)\EcmaScript.NET.modified.dll</HintPath>
+      <HintPath>..\References\EcmaScript.NET.modified.dll</HintPath>
     </Reference>
     <Reference Include="Iesi.Collections, Version=1.0.0.3, Culture=neutral, PublicKeyToken=aa95f207798dfdb4, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Third Party\Yahoo.Yui.Compressor v1.3.0.0.zip (for .NET 2.0)\Iesi.Collections.dll</HintPath>
+      <HintPath>..\References\Iesi.Collections.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
     <Reference Include="Yahoo.Yui.Compressor.NET20, Version=1.3.0.0, Culture=neutral, PublicKeyToken=0734edc2d38ad47d, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Third Party\Yahoo.Yui.Compressor v1.3.0.0.zip (for .NET 2.0)\Yahoo.Yui.Compressor.NET20.dll</HintPath>
+      <HintPath>..\References\Yahoo.Yui.Compressor.NET20.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

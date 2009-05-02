@@ -7,6 +7,32 @@ namespace YUICompressor
 {
     class Program
     {
+        #region Properties
+
+        private const string MinimizedExtension = "min";
+        private const string JavaScriptExtension = "js";
+        private const string CSSExtension = "css";
+        private const string ReplaceArg = "-replace";
+        private const string IgnoreArg = "-ignore:";
+        private const string HelpArgSimple = "?";
+        private const string HelpArg = "help";
+
+        private static char[] IgnoreSplitter = new char[] { ',' };
+        private static string AppName
+        {
+            get { return Path.GetFileName(System.Reflection.Assembly.GetExecutingAssembly().Location); }
+        }
+        private static int BuildNumber
+        {
+            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Build; }
+        }
+        private static int VersionNumber
+        {
+            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Major; }
+        }
+
+        #endregion
+
         static void Main(string[] args)
         {
             if (args == null ||
@@ -45,7 +71,6 @@ namespace YUICompressor
 
             string dir = StripQuoutes(args[0]);
 
-
             if (!Directory.Exists(dir))
             {
                 ShowNoDirError(dir);
@@ -53,123 +78,74 @@ namespace YUICompressor
             }
 
 
-            string[] jsFiles = Directory.GetFiles(dir, string.Format("*.{0}", JavaScriptExtension), SearchOption.AllDirectories);
-            string[] cssFiles = Directory.GetFiles(dir, string.Format("*.{0}", CSSExtension), SearchOption.AllDirectories);
+            string[] jsFiles = Directory.GetFiles(dir,
+                string.Format("*.{0}", JavaScriptExtension),
+                SearchOption.AllDirectories);
+            string[] cssFiles = Directory.GetFiles(dir, 
+                string.Format("*.{0}", CSSExtension), 
+                SearchOption.AllDirectories);
 
-            int writtenJS = 0;
-            int writtenCSS = 0;
-
-            if (
-                (jsFiles == null || jsFiles.Length == 0) &&
+            if ((jsFiles == null || jsFiles.Length == 0) &&
                 (cssFiles == null || cssFiles.Length == 0))
             {
                 ShowNoFilesToCompressError(dir);
                 return;
             }
+
+            int writtenJS = 0;
+            int writtenCSS = 0;
+            
             if (jsFiles != null)
-            {
-                foreach (string jsFile in jsFiles)
-                {
-                    if (jsFile.EndsWith(string.Format("{0}.{1}",
-                        MinimizedExtension,
-                        JavaScriptExtension), StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                    if (ignoreLists.FindIndex(new Predicate<string>(
-                        delegate(string ignore)
-                        {
-                            return Path.GetFileName(jsFile).IndexOf(ignore, StringComparison.InvariantCultureIgnoreCase) != -1;
-                        })
-                        ) != -1)
-                        continue;
-                    string jsContent = File.ReadAllText(jsFile);
-                    if (string.IsNullOrEmpty(jsContent))
-                        continue;
-                    jsContent = Yahoo.Yui.Compressor.JavaScriptCompressor.Compress(jsContent);
-                    string path = replace ? jsFile : GetReplacedPath(jsFile, JavaScriptExtension);
-                    File.WriteAllText(path, jsContent);
-                    writtenJS++;
-                }
-            }
+                writtenJS = CompressFiles(jsFiles, 
+                    JavaScriptExtension, 
+                    ignoreLists, 
+                    replace);
             if (cssFiles != null)
-            {
-                foreach (string cssFile in cssFiles)
-                {
-                    if (cssFile.EndsWith(string.Format("{0}.{1}",
-                        MinimizedExtension,
-                        CSSExtension), StringComparison.InvariantCultureIgnoreCase))
-                        continue;
-                    if (ignoreLists.FindIndex(new Predicate<string>(
-                        delegate(string ignore)
-                        {
-                            return Path.GetFileName(cssFile).IndexOf(ignore, StringComparison.InvariantCultureIgnoreCase) != -1;
-                        })
-                        ) != -1)
-                        continue;
-                    string cssContent = File.ReadAllText(cssFile);
-                    if (string.IsNullOrEmpty(cssContent))
-                        continue;
-                    cssContent = Yahoo.Yui.Compressor.CssCompressor.Compress(cssContent);
-                    string path = replace ? cssFile : GetReplacedPath(cssFile, CSSExtension);
-                    File.WriteAllText(path, cssContent);
-                    writtenCSS++;
-                }
-            }
-            ShowSummary(dir, writtenJS, writtenCSS, started, ignoreLists.Count);
-
-        }
-
-        private static void ShowSummary(string dir, int jsFilesWritten, int cssFilesWritten, DateTime started, int ignoreLength)
-        {
+                writtenCSS = CompressFiles(cssFiles, 
+                    CSSExtension, 
+                    ignoreLists, 
+                    replace);
+            
             string totalTime = "";
             TimeSpan t = DateTime.Now.Subtract(started);
             totalTime = string.Format("{0} seconds", t.Seconds);
-            Console.WriteLine("***************************************");
-            Console.WriteLine("YUI Compressor Version : {0} Build : {1}",
-                VersionNumber,
-                BuildNumber);
-            Console.WriteLine("***************************************");
-            Console.WriteLine("");
-            Console.WriteLine("Compressed the directory '{0}'", dir);
-            Console.WriteLine("JavaScript files compressed : {0}", jsFilesWritten);
-            Console.WriteLine("Stylesheet files compressed : {0}", cssFilesWritten);
-            Console.WriteLine("Ignored files : {0}", ignoreLength);
-            Console.WriteLine("");
-            Console.WriteLine("Total time : {0}", totalTime);
+
+            ShowSummary(dir, 
+                writtenJS, 
+                writtenCSS, 
+                totalTime, 
+                ignoreLists.Count);
         }
 
-        private static string GetReplacedPath(string inFile, string inExtension)
-        {
-            return string.Format("{0}.{1}.{2}",
-                Path.Combine(Path.GetDirectoryName(inFile), Path.GetFileNameWithoutExtension(inFile)),
-                MinimizedExtension,
-                inExtension);
-        }
-
+        #region Console "UI" Helpers
+    
         private static void ShowNoFilesToCompressError(string inDir)
         {
-            Console.WriteLine("The directory '{0}' has no javascripts or css files", inDir);
+            WriteIntro();
+            Console.WriteLine("The directory '{0}' has no {1} or {2} files",
+                inDir,
+                JavaScriptExtension,
+                CSSExtension);
+            WriteUseHelp();
         }
 
         private static void ShowNoDirError(string inDir)
         {
+            WriteIntro();
             Console.WriteLine("The directory '{0}' was not found", inDir);
+            WriteUseHelp();
         }
 
         private static void ShowHelp()
         {
-            Console.WriteLine("***************************************");
-            Console.WriteLine("YUI Compressor Version : {0} Build : {1}",
-                VersionNumber,
-                BuildNumber);
-            Console.WriteLine("***************************************");
-            Console.WriteLine("");
+            WriteIntro();
             Console.WriteLine("Usage : ");
-            Console.WriteLine("{0} \"path with spaces\"",AppName);
+            Console.WriteLine("{0} \"path with spaces\"", AppName);
             Console.WriteLine("Arguments :");
             Console.WriteLine(ReplaceArg);
-            Console.WriteLine("     {0} is optional, and will",                ReplaceArg);
+            Console.WriteLine("     {0} is optional, and will", ReplaceArg);
             Console.WriteLine("     replace all {0} and {1}",
-                JavaScriptExtension, 
+                JavaScriptExtension,
                 CSSExtension);
             Console.WriteLine("     with the minified version.", CSSExtension);
             Console.WriteLine("     By default, the compressor will");
@@ -177,7 +153,7 @@ namespace YUICompressor
             Console.WriteLine("         filename.{0}.{1}|{2}",
                 MinimizedExtension,
                 CSSExtension,
-                JavaScriptExtension); 
+                JavaScriptExtension);
             Console.WriteLine("");
             Console.WriteLine(IgnoreArg);
             Console.WriteLine("     {0}file1{1}\"file with spaces\"",
@@ -189,6 +165,54 @@ namespace YUICompressor
             Console.WriteLine("");
         }
 
+        private static void WriteIntro()
+        {
+            Console.WriteLine("***************************************");
+            Console.WriteLine("YUI Compressor Utility Version : {0} Build : {1}",
+                VersionNumber,
+                BuildNumber);
+            Console.WriteLine("***************************************");
+            Console.WriteLine("");
+        }
+
+        private static void WriteUseHelp()
+        {
+            Console.WriteLine("");
+            Console.WriteLine("Use {0} {1} or {2} for help",
+                AppName,
+                HelpArg,
+                HelpArgSimple);
+            Console.WriteLine("");
+            Console.WriteLine("");
+        }
+
+        private static void ShowSummary(string dir, 
+            int jsFilesWritten, 
+            int cssFilesWritten, 
+            string seconds, 
+            int ignoreLength)
+        {
+            WriteIntro();
+            Console.WriteLine("Compressed the directory '{0}'", dir);
+            Console.WriteLine("JavaScript files compressed : {0}", jsFilesWritten);
+            Console.WriteLine("Stylesheet files compressed : {0}", cssFilesWritten);
+            Console.WriteLine("Ignored files : {0}", ignoreLength);
+            Console.WriteLine("");
+            Console.WriteLine("Total time : {0}", seconds);
+            Console.WriteLine("");
+        }
+
+        #endregion Console "UI" Helpers
+
+        #region Helpers
+
+        private static string GetReplacedPath(string inFile, string inExtension)
+        {
+            return string.Format("{0}.{1}.{2}",
+                Path.Combine(Path.GetDirectoryName(inFile), Path.GetFileNameWithoutExtension(inFile)),
+                MinimizedExtension,
+                inExtension);
+        }
 
         private static string StripQuoutes(string inString)
         {
@@ -199,28 +223,39 @@ namespace YUICompressor
             return inString;
         }
 
-        private const string MinimizedExtension = "min";
-        private const string JavaScriptExtension = "js";
-        private const string CSSExtension = "css";
-        private const string ReplaceArg = "-replace";
-        private const string IgnoreArg = "-ignore:";
-        private static char[] IgnoreSplitter = new char[] { ',' };
-        private const string HelpArgSimple = "?";
-        private const string HelpArg = "help";
-
-        private static string AppName
+        private static int CompressFiles(string[] inFiles, 
+            string inExtension, 
+            List<string> ignoreList, 
+            bool inReplace)
         {
-            get { return Path.GetFileName(System.Reflection.Assembly.GetExecutingAssembly().Location); }
+            int written = 0;
+            foreach (string file in inFiles)
+            {
+                if (file.EndsWith(string.Format("{0}.{1}",
+                    MinimizedExtension,
+                    inExtension), StringComparison.InvariantCultureIgnoreCase))
+                    continue;
+                if (ignoreList.FindIndex(new Predicate<string>(
+                    delegate(string ignore)
+                    {
+                        return Path.GetFileName(file).IndexOf(ignore, StringComparison.InvariantCultureIgnoreCase) != -1;
+                    })
+                    ) != -1)
+                    continue;
+                string fileContent = File.ReadAllText(file);
+                if (string.IsNullOrEmpty(fileContent))
+                    continue;
+                if (inExtension == JavaScriptExtension)
+                    fileContent = Yahoo.Yui.Compressor.JavaScriptCompressor.Compress(fileContent);
+                else
+                    fileContent = Yahoo.Yui.Compressor.CssCompressor.Compress(fileContent);
+                string path = inReplace ? file : GetReplacedPath(file, inExtension);
+                File.WriteAllText(path, fileContent);
+                written++;
+            }
+            return written;
         }
 
-        private static int BuildNumber
-        {
-            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Build; }
-        }
-
-        private static int VersionNumber
-        {
-            get { return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version.Major; }
-        }
+        #endregion Helpers
     }
 }
