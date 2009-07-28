@@ -1,7 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YUICompressor", "YUICompressor\YUICompressor.csproj", "{566BC86D-B650-4A8C-9340-12B4C8C0615F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YUICompressorConsole", "YUICompressor\YUICompressorConsole.csproj", "{566BC86D-B650-4A8C-9340-12B4C8C0615F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YUICompressorWinForm", "YUICompressorWinForm\YUICompressorWinForm.csproj", "{28DCD46D-6E8E-4066-8C67-DB402D9D3CF1}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,6 +15,10 @@ Global
 		{566BC86D-B650-4A8C-9340-12B4C8C0615F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{566BC86D-B650-4A8C-9340-12B4C8C0615F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{566BC86D-B650-4A8C-9340-12B4C8C0615F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28DCD46D-6E8E-4066-8C67-DB402D9D3CF1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28DCD46D-6E8E-4066-8C67-DB402D9D3CF1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28DCD46D-6E8E-4066-8C67-DB402D9D3CF1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28DCD46D-6E8E-4066-8C67-DB402D9D3CF1}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
